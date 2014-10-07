@@ -1,16 +1,13 @@
 #include <stdio.h>
-#include <string.h> 
 #include <stdlib.h>
 #include <math.h>
-float *load_matrix(char *filename);
+#include <string.h>
 
-int main(void)
-{
-  
-  char file[1024];
+float *load_matrix(char *filename);
+int main(int argc, char **argv){
   float *matrix_A;
+    float *matrix_C;
   float *matrix_At;
-  float *matrix_C;
   float *matrix_AtA;
   float *Lematrix;
   float *LematrixT;
@@ -19,52 +16,25 @@ int main(void)
   float *vector_Y;
   float *vector_AtB;
   int n_row, n_cols,n;
-  int i, j, k, m, l,s;
+  int i, j,k,m,l;
   char c;
-  double producto,suma, diferencia, filtro;
-    
-    
+  double  producto,suma;
+
     FILE *in;
-    FILE *in2;
-   
-    char filename[100]="values.dat";
+    char filename[100]="bi_coef.dat";
     in = fopen(filename,"w");
-   
     
     if(!in){
         printf("problems opening the file %s\n", filename);
         exit(1);
     }
+
     
-    
-    in2 = fopen("list.dat","r");
-    if(!in2){
-        printf("problems opening the file %s\n", filename);
-        exit(1);
-    }
-    
-      fprintf(in, " ");
- 
-    
-    for(s=0;s<1000;s++){
-        fscanf(in2, "%s \n", file );
-      //fprintf(in, "%s \n", file);
-        //printf("%s\n",file);
-    
-  
-    //file="experiment_theta_10.4_phi_192.6.dat";
-    //fprintf(in, "%s \n", file);
-    //printf("%s \n", file);
-      
-  n_row=39;
+  n_row=884;
   n_cols=2;
   n=3;
- 
-        
-        
-  matrix_C = load_matrix(file);
-        
 
+  matrix_C = load_matrix(argv[1]);
   matrix_A = malloc(n_row * n * sizeof(float));
   matrix_At = malloc(n_row * n * sizeof(float));
   matrix_AtA = malloc(n*n*sizeof(float)); 
@@ -75,20 +45,18 @@ int main(void)
   vector_Y = malloc(n*sizeof(float));  
   vector_AtB = malloc(n*sizeof(float)); 
 
-  
- // filtra archivos malos
-  diferencia=0.0;
-  filtro=0.0;
-for(i=1;i<n_row-1;i++){
-      
-  diferencia =fabs(matrix_C[i*2 +1]-matrix_C[(i-1)*2 +1]);
-  if(diferencia>filtro){
-    filtro=fabs(diferencia);
-      }
-  }
-
-
-if(filtro<4.0){
+// genera la matriz de parametros de theta
+    for(i=0;i<n_row;i++){
+        for(j=0;j<3;j++){
+            
+            matrix_A[i*3 + j]=pow(matrix_C[i*2 +0],j);
+            if(j==2){
+                matrix_A[i*3 + j]=matrix_A[i*3 + j];
+            }
+            
+        }
+        
+    }
 
 
 //genera el vector b de posiciones finales
@@ -97,49 +65,7 @@ for(i=0;i<n_row;i++){
 
  }
 
-// genera la matriz de parametros de tiempo
-for(i=0;i<n_row;i++){
-    for(j=0;j<3;j++){
-      
-      matrix_A[i*3 + j]=pow(matrix_C[i*2 +0],j);
-      if(j==2){
-	matrix_A[i*3 + j]=matrix_A[i*3 + j]/2.0;
-      }
-
-    }
-
-  }
-
-// conseguir theta y phi e imprimir en values
-
-m =strlen(file);
-
-for(i=17;i<m;i++){
-    c=file[i];
-    if(c!='_'){
-        fprintf(in, "%c", c);
- }
-    else {
-      k=i+5;
-      break;
- }
- }
-
-  fprintf(in, " ");
-  l=0;
-  for(i=k;i<m;i++){
-    c=file[i];
-    if(c=='.'){
-    l=l+1;
-    }
-    if(l==2){
-      break;
-    }
-      fprintf(in, "%c", c);
-   }
-    fprintf(in, " ");
-
-
+ 
 // conseguir At
    for(j=0;j<n;j++){
 for(i=0;i<n_row;i++){
@@ -230,7 +156,7 @@ for(i=0;i<n;i++)
 
 
 
-// resolver LTX=Y e imprimir en values
+// resolver LTX=Y
 for(i=0;i<n;i++)
 {
   vector_X[i]=0;
@@ -246,25 +172,24 @@ for(i=0;i<n;i++)
    vector_X[n-1-i]=(vector_Y[n-1-i]-producto)/LematrixT[(n-1-i)*n +(n-1-i)];
 }
 
-for(i=0;i<n;i++)
+/*for(i=0;i<n;i++)
 {
-fprintf(in ,"%f ", vector_X[i]);
+printf("%f \n", vector_X[i]);  
  
 }
+*/
 
-
-fprintf(in, "\n ");
-
-
-}
     
+    for(i=0;i<n;i++)
+    {
+        fprintf(in ,"%f \n", vector_X[i]);
+        
+    }
 
- }
+ 
 
-   
-  return(0);
+
 }
-
 
 
 float *load_matrix(char *filename){
@@ -274,7 +199,7 @@ float *load_matrix(char *filename){
   int i;
   int j;
 
-  n_row=38;
+  n_row=884;
   n_cols=2;
 
   if(!(in=fopen(filename, "r"))){
@@ -289,9 +214,7 @@ float *load_matrix(char *filename){
     for(j=0;j<n_cols;j++){
       fscanf(in, "%f", &matrix[i*n_cols + j]);
     }
-  }
-  
-    fclose(in);
+  }    
+ 
   return matrix;
-   
 }
